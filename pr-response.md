@@ -1,7 +1,7 @@
 # PR Response Doc — CineLog Watchlist Feature
 
 ## AI Usage
-<!-- Fill in at the end — how you used AI tools during this project -->
+I used AI as a devil's advocate for Comments 4 and 5 after writing my initial drafts. For Comment 4, I asked: "What counterargument would a careful code reviewer raise against defaulting watchlist entries to public=True?" The AI surfaced the accidental-exposure concern (users unintentionally sharing sensitive additions), which I hadn't fully articulated — I added the tradeoff paragraph acknowledging it. For Comment 5, I asked the same question about keeping alphabetical order. The AI pointed out that alphabetical is weakest precisely when lists are short and actively growing, which is exactly when new users are most engaged. That was something I hadn't explicitly addressed, so I added the "date-added is strongest for short recently-updated lists" acknowledgment to make clear I wasn't dismissing the reviewer's use case. Both final responses are my own reasoning; AI helped me check for gaps I'd missed.
 
 ## Comment 1 — Rename
 **What I did:** Renamed `save_to_watchlist()` to `add_to_watchlist()` in `services/watchlist_service.py` to match the `verb_to_noun` naming convention used by `add_to_collection()` in `collection_service.py`.
@@ -40,4 +40,52 @@
 **How I verified no conflict remains:** Ran `git log --oneline` — the history is linear with no merge commits. Ran `pytest tests/ -v` after the fix commit — all 5 tests pass. Grepped for `db.Integer` and `int` references in the watchlist files to confirm no remaining integer-typed `film_id` columns.
 
 ## PR Description
-<!-- Written at the end — feature overview, design decisions, manual testing steps -->
+
+### What this PR adds
+
+This PR implements the watchlist feature for CineLog — a way for users to save films they want to watch later, separate from their collection of films they've already seen.
+
+**New model:** `WatchlistEntry` in `models.py` — stores `user_id`, `film_id` (UUID, matching the post-refactor `Film.id` type), `date_added`, and a `public` boolean (default `True`).
+
+**New service:** `services/watchlist_service.py` — provides `add_to_watchlist(user_id, film_id)` (raises `FilmNotFoundError` if the film doesn't exist, `AlreadyInWatchlistError` if already saved) and `get_watchlist(user_id)` (returns films sorted alphabetically by title).
+
+**New endpoints** via `routes/watchlist/watchlist.py`:
+- `GET /watchlist/<user_id>` — returns the user's watchlist
+- `POST /watchlist/<user_id>/add` — adds a film; body: `{"film_id": "<uuid>"}`
+
+### Design decisions
+
+**Default visibility (`public=True`):** Watchlists default to public because CineLog's social value depends on discoverability. A user who forgets to set visibility ends up with a watchlist others can browse, which is the right default for a film recommendation platform. Users who want privacy can pass `public=False`. The tradeoff is accidental exposure for sensitive additions, which is low-stakes for a film app.
+
+**Sort order (alphabetical):** The watchlist sorts by `Film.title` ascending. A watchlist is a browsing tool ("what do I want to watch?"), not a history — alphabetical makes it scannable and stable as it grows. The reviewer's date-added suggestion is strongest for short, actively-updated lists; alphabetical scales better for longer watchlists.
+
+### Manual testing steps
+
+```bash
+# Start the server
+flask run
+
+# Add a film to a watchlist (replace IDs with real UUIDs from your DB)
+curl -X POST http://localhost:5000/watchlist/<user_id>/add \
+  -H "Content-Type: application/json" \
+  -d '{"film_id": "<film_uuid>"}'
+# → 201 with WatchlistEntry JSON
+
+# View the watchlist
+curl http://localhost:5000/watchlist/<user_id>
+# → 200 with list of films sorted by title, each with date_added and public fields
+
+# Try adding the same film twice
+curl -X POST http://localhost:5000/watchlist/<user_id>/add \
+  -H "Content-Type: application/json" \
+  -d '{"film_id": "<same_film_uuid>"}'
+# → 409 (AlreadyInWatchlistError)
+
+# Try a nonexistent film_id
+curl -X POST http://localhost:5000/watchlist/<user_id>/add \
+  -H "Content-Type: application/json" \
+  -d '{"film_id": "00000000-0000-0000-0000-000000000000"}'
+# → 404 (FilmNotFoundError)
+```
+
+Run the test suite: `.venv/Scripts/python -m pytest tests/ -v` — 5 passed.
