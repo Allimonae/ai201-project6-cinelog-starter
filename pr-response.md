@@ -3,6 +3,25 @@
 ## AI Usage
 I used AI as a devil's advocate for Comments 4 and 5 after writing my initial drafts. For Comment 4, I asked: "What counterargument would a careful code reviewer raise against defaulting watchlist entries to public=True?" The AI surfaced the accidental-exposure concern (users unintentionally sharing sensitive additions), which I hadn't fully articulated — I added the tradeoff paragraph acknowledging it. For Comment 5, I asked the same question about keeping alphabetical order. The AI pointed out that alphabetical is weakest precisely when lists are short and actively growing, which is exactly when new users are most engaged. That was something I hadn't explicitly addressed, so I added the "date-added is strongest for short recently-updated lists" acknowledgment to make clear I wasn't dismissing the reviewer's use case. Both final responses are my own reasoning; AI helped me check for gaps I'd missed.
 
+## Git Log Screenshot
+
+```
+$ git log --oneline origin/main..HEAD
+
+a2c9b1f docs: add PR description and AI usage section to pr-response.md
+69cac8c fix: update WatchlistEntry and watchlist_service to use UUID film_id
+f0d49e6 docs: add pr-response entries for all six review comments
+512f2ab test: add test for nonexistent film in add_to_watchlist
+c61d2d3 fix: add deduplication check to add_to_watchlist
+b0bcc11 fix: rename save_to_watchlist to add_to_watchlist
+6bb22df fix: use db.session.get() for film lookup in collection and watchlist services
+4b98db7 feat: add WatchlistEntry model and watchlist endpoints
+```
+
+8 commits · all conventional format (`feat:`, `fix:`, `test:`, `docs:`) · no merge commits · rebased on `origin/main`
+
+---
+
 ## Comment 1 — Rename
 **What I did:** Renamed `save_to_watchlist()` to `add_to_watchlist()` in `services/watchlist_service.py` to match the `verb_to_noun` naming convention used by `add_to_collection()` in `collection_service.py`.
 
