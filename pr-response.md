@@ -33,9 +33,11 @@
 **Engagement with reviewer's point:** The maintainer's case for date-added (newest first) is strongest for *short, recently-updated* lists — you added five films this week and want to see them at the top. That's a real use case. But it falls apart as the list grows: films you added a year ago and still haven't watched get buried, and the list loses navigability. I'd be persuaded to switch to date-added if CineLog adds sorting controls (users could pick their preferred order), because then neither choice is permanent. Until then, alphabetical is the more useful default for longer-lived watchlists.
 
 ## Comment 6 — Rebase
-**What conflicted:**
-**How I resolved it:**
-**How I verified no conflict remains:**
+**What conflicted:** Two things came up during `git rebase origin/main`. First, `.gitignore` had an add/add conflict — our branch had an untracked `.gitignore` that differed from the one added in main's `chore: add .gitignore` commit. The only real difference was that main's version included `.pytest_cache/` and ours didn't. Second, and more substantively: main's `refactor: migrate film IDs from integer to UUID` commit changed `Film.id` from `db.Integer` to `db.String(36)` and updated `CollectionEntry.film_id` to match. Our branch's `WatchlistEntry` model still declared `film_id = db.Column(db.Integer, ...)` and the docstring in `add_to_watchlist()` still described it as an `int`.
+
+**How I resolved it:** For `.gitignore`, the commits were identical in intent so I ran `git rebase --skip` to drop our redundant commit and keep main's version (which included `.pytest_cache/`). For the UUID conflict, I updated `WatchlistEntry.film_id` in `models.py` from `db.Integer` to `db.String(36)` (matching how `CollectionEntry.film_id` is declared on main), and updated the docstring in `add_to_watchlist()` from `film_id (int)` to `film_id (str): UUID of the film`. I committed this as a separate fix commit.
+
+**How I verified no conflict remains:** Ran `git log --oneline` — the history is linear with no merge commits. Ran `pytest tests/ -v` after the fix commit — all 5 tests pass. Grepped for `db.Integer` and `int` references in the watchlist files to confirm no remaining integer-typed `film_id` columns.
 
 ## PR Description
 <!-- Written at the end — feature overview, design decisions, manual testing steps -->
