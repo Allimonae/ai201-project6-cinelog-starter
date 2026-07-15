@@ -5,22 +5,7 @@ I used AI as a devil's advocate for Comments 4 and 5 after writing my initial dr
 
 ## Git Log Screenshot
 
-```
-$ git log --oneline origin/main..HEAD
-
-a2c9b1f docs: add PR description and AI usage section to pr-response.md
-69cac8c fix: update WatchlistEntry and watchlist_service to use UUID film_id
-f0d49e6 docs: add pr-response entries for all six review comments
-512f2ab test: add test for nonexistent film in add_to_watchlist
-c61d2d3 fix: add deduplication check to add_to_watchlist
-b0bcc11 fix: rename save_to_watchlist to add_to_watchlist
-6bb22df fix: use db.session.get() for film lookup in collection and watchlist services
-4b98db7 feat: add WatchlistEntry model and watchlist endpoints
-```
-
-8 commits · all conventional format (`feat:`, `fix:`, `test:`, `docs:`) · no merge commits · rebased on `origin/main`
-
----
+<img width="772" height="220" alt="image" src="https://github.com/user-attachments/assets/449e9107-6754-40b3-a90b-be7e36cad672" />
 
 ## Comment 1 — Rename
 **What I did:** Renamed `save_to_watchlist()` to `add_to_watchlist()` in `services/watchlist_service.py` to match the `verb_to_noun` naming convention used by `add_to_collection()` in `collection_service.py`.
